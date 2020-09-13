@@ -25,13 +25,13 @@ def rss_filter():
     for rss_entry in base_rss.entries:
         if title_contains in rss_entry.title:
             result_rss_entries.append(rss_entry)
-    return build_rss_string(result_rss_entries, base_rss.feed.title)
+    return build_rss_string(result_rss_entries, base_rss.feed.title, title_contains)
 
 
-def build_rss_string(result_rss_entries, base_rss_title):
+def build_rss_string(result_rss_entries, base_rss_title, title_contains):
     # Create a feed, https://github.com/lkiesow/python-feedgen#create-a-feed
     fg = FeedGenerator()
-    fg.title('Filtered' + base_rss_title)
+    fg.title('[%s] filtered [%s]' % (title_contains, base_rss_title))
     fg.link(href='https://github.com/VergeDX/rss_filter_server')
     fg.description('Rss filter, writen by HyDEV : )')
 
