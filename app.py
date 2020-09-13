@@ -1,43 +1,50 @@
 import feedparser
 from feedgen.feed import FeedGenerator
-from flask import Flask, Response
+from flask import Flask, Response, request
 
 app = Flask(__name__)
 
-# Phone name, format should be _$name_, found name in:
-# https://sourceforge.net/projects/xiaomi-eu-multilang-miui-roms/files/xiaomi.eu/MIUI-STABLE-RELEASES/MIUIv12/
-NAME = '_HMK30_'
-
-# Base rss link, also satisfied with weekly release.
-EU_MIUI_RSS = 'https://sourceforge.net/projects/xiaomi-eu-multilang-miui-roms/rss?' \
-              'path=/xiaomi.eu/MIUI-STABLE-RELEASES/MIUIv12'
-
 
 @app.route('/')
-def eu_miui_filter():
-    base_rss = feedparser.parse(EU_MIUI_RSS)
-    for rss_entries in base_rss.entries:
-        if NAME in rss_entries.title:
-            # The Latest ROM's file name & download link.
-            file_name = rss_entries.title.split('/')[-1]
-            download_link = rss_entries.media_content[0]['url']
+def rss_filter():
+    rss_url = request.args.get('rss_url')
+    title_contains = request.args.get('title_contains')
 
-            # Create a feed.
-            # https://github.com/lkiesow/python-feedgen#create-a-feed
-            fg = FeedGenerator()
-            fg.title('%s \'s eu MIUI' % (NAME,))
-            fg.link(href='https://github.com/VergeDX')
-            fg.description('Rss filter, writen by Vanilla. ')
+    if not (rss_url and title_contains):
+        return 'Need rss_url & title_contains as query string, \n' \
+               'this will return a new rss with title filter. \n' \
+               '(Apply $title_contains for each item from $rss_url). '
 
-            # Add feed entries.
-            # https://github.com/lkiesow/python-feedgen#add-feed-entries
-            fe = fg.add_entry()
-            fe.title(file_name)
-            fe.link(href=download_link)
+    base_rss = feedparser.parse(rss_url)
+    # No base_rss.feed, seems cannot fetch origin rss url.
+    if not base_rss.feed:
+        return 'Cannot fetch rss url\'s feed title, \n' \
+               'please check the url: \n' + rss_url
 
-            # Using response with mine type xml, avoid the browser parse.
-            # https://stackoverflow.com/questions/11773348/python-flask-how-to-set-content-type
-            return Response(fg.rss_str(pretty=True), mimetype='text/xml')
+    result_rss_entries = []
+    for rss_entry in base_rss.entries:
+        if title_contains in rss_entry.title:
+            result_rss_entries.append(rss_entry)
+    return build_rss_string(result_rss_entries, base_rss.feed.title)
+
+
+def build_rss_string(result_rss_entries, base_rss_title):
+    # Create a feed, https://github.com/lkiesow/python-feedgen#create-a-feed
+    fg = FeedGenerator()
+    fg.title('Filtered' + base_rss_title)
+    fg.link(href='https://github.com/VergeDX/rss_filter_server')
+    fg.description('Rss filter, writen by HyDEV : )')
+
+    for rss_entry in result_rss_entries:
+        # Add feed entries.
+        # https://github.com/lkiesow/python-feedgen#add-feed-entries
+        fe = fg.add_entry()
+        fe.title(rss_entry.title)
+        fe.link(href=rss_entry.link)
+
+    # Using response with mine type xml, avoid the browser parse.
+    # https://stackoverflow.com/questions/11773348/python-flask-how-to-set-content-type
+    return Response(fg.rss_str(pretty=True), mimetype='text/xml')
 
 
 if __name__ == '__main__':
