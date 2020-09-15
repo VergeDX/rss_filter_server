@@ -1,4 +1,3 @@
-import lxml
 import requests
 from flask import Flask, Response, request
 from lxml import etree
@@ -19,23 +18,22 @@ def rss_filter():
 
     try:
         base_xml = requests.get(rss_url).content
-    except requests.exceptions.MissingSchema as e:
-        return Response(e.__str__())
-
-    try:
         root = etree.fromstring(base_xml)
-    except lxml.etree.XMLSyntaxError as e:
-        return Response('Link may not xml: ' + e.__str__())
 
-    if root[0].tag != 'channel':
-        return Response('Link %s may not rss. ' % (rss_url,))
+        #  Subordinate to the <rss> element is a single <channel> element.
+        # @see https://validator.w3.org/feed/docs/rss2.html
+        channel = root.xpath('/rss/channel')[0]
+        items = channel.xpath('item')
 
-    for child in root[0]:
-        # TODO: child[0] should be title...?
-        if child.tag == 'item' and title_contains not in child[0].text:
-            root[0].remove(child)
+        for item in items:
+            titles = item.xpath('title')
+            if titles and title_contains not in titles[0].text:
+                channel.remove(item)
 
-    return Response(etree.tostring(root), mimetype='text/xml')
+        return Response(etree.tostring(root), mimetype='text/xml')
+
+    except Exception as e:
+        return Response('Error: ' + e.__str__())
 
 
 if __name__ == '__main__':
