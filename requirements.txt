@@ -1,4 +1,4 @@
 Flask
-feedparser
-feedgen
 gunicorn
+lxml
+requests
