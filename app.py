@@ -2,6 +2,7 @@ import requests
 from flask import Flask, Response, request
 from lxml import etree
 
+# TODO: rss item merge.
 app = Flask(__name__)
 
 
