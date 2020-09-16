@@ -2,3 +2,4 @@ Flask
 gunicorn
 lxml
 requests
+feedgen
