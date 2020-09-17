@@ -15,6 +15,7 @@ def rss_filter():
     rss_url = request.args.get('rss_url')
     title_contains = request.args.get('title_contains')
 
+    # TODO: change node, write usage of API.
     # Need 2 args, or else show usage.
     if not (rss_url and title_contains):
         return 'Need rss_url & title_contains as query string, \n' \
