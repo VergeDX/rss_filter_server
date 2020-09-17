@@ -47,26 +47,30 @@ def github_releases():
     if not repos_arg:
         return Response('Need repos arg. ')
 
-    repo_list = repos_arg.split(', ')
+    try:
+        repo_list = repos_arg.split(', ')
 
-    # https://github.com/lkiesow/python-feedgen#create-a-feed
-    fg = FeedGenerator()
+        # https://github.com/lkiesow/python-feedgen#create-a-feed
+        fg = FeedGenerator()
 
-    # ValueError: Required fields not set (title, link, description)
-    fg.title('GitHub multi-repo releases tracker')
-    fg.link(href='https://github.com/VergeDX/rss_filter_server')
-    fg.description('Tracker more repo\'s release in one rss link! '
-                   'Written by HyDEV, thanks for using. ')
+        # ValueError: Required fields not set (title, link, description)
+        fg.title('GitHub multi-repo releases tracker')
+        fg.link(href='https://github.com/VergeDX/rss_filter_server')
+        fg.description('Tracker more repo\'s release in one rss link! '
+                       'Written by HyDEV, thanks for using. ')
 
-    for repo_str in repo_list:
-        r_json = requests.get(REPOS_API + repo_str + LATEST).json()
-        if 'message' not in r_json:
-            # https://github.com/lkiesow/python-feedgen#add-feed-entries
-            fe = fg.add_item()
-            fe.title('[%s] %s' % (repo_str, r_json['name']))
-            fe.link(href=r_json['html_url'])
+        for repo_str in repo_list:
+            r_json = requests.get(REPOS_API + repo_str + LATEST).json()
+            if 'message' not in r_json:
+                # https://github.com/lkiesow/python-feedgen#add-feed-entries
+                fe = fg.add_item()
+                fe.title('[%s] %s' % (repo_str, r_json['name']))
+                fe.link(href=r_json['html_url'])
 
-    return Response(fg.rss_str(), mimetype='text/xml')
+        return Response(fg.rss_str(), mimetype='text/xml')
+
+    except Exception as e:
+        return Response('Error: ' + e.__str__())
 
 
 if __name__ == '__main__':
