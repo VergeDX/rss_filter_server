@@ -11,16 +11,17 @@ LATEST = '/releases/latest'
 
 
 @app.route('/')
+def api_usage():
+    return Response('Usage: '
+                    'https://github.com/VergeDX/rss_filter_server/blob/master/README.md')
+
+
+@app.route('/filter')
 def rss_filter():
     rss_url = request.args.get('rss_url')
     title_contains = request.args.get('title_contains')
-
-    # TODO: change node, write usage of API.
-    # Need 2 args, or else show usage.
     if not (rss_url and title_contains):
-        return 'Need rss_url & title_contains as query string, \n' \
-               'this will return a new rss with title filter. \n' \
-               '(Apply $title_contains for each item from $rss_url). '
+        api_usage()
 
     try:
         base_xml = requests.get(rss_url).content
@@ -46,7 +47,7 @@ def rss_filter():
 def github_releases():
     repos_arg = request.args.get('repos')
     if not repos_arg:
-        return Response('Need repos arg. ')
+        api_usage()
 
     try:
         repo_list = repos_arg.split(', ')
