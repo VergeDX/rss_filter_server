@@ -21,7 +21,7 @@ def rss_filter():
     rss_url = request.args.get('rss_url')
     title_contains = request.args.get('title_contains')
     if not (rss_url and title_contains):
-        api_usage()
+        return api_usage()
 
     try:
         base_xml = requests.get(rss_url).content
@@ -47,7 +47,7 @@ def rss_filter():
 def github_releases():
     repos_arg = request.args.get('repos')
     if not repos_arg:
-        api_usage()
+        return api_usage()
 
     try:
         repo_list = repos_arg.split(', ')

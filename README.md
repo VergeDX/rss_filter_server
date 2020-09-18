@@ -2,7 +2,7 @@
 A Flask server to filter rss feed.  
 
 ## Usage
-`GET /` require url params `rss_url` and `title_contains`.  
+`GET /filter` require url params `rss_url` and `title_contains`.  
 using the given `rss_url`, get it and filter it by `title_contains`.  
 (remove item which not contains `title_contains`, by using lxml)
 
