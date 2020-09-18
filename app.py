@@ -12,28 +12,25 @@ LATEST = '/releases/latest'
 
 @app.route('/')
 def api_usage():
-    return Response('Usage: '
-                    'https://github.com/VergeDX/rss_filter_server/blob/master/README.md')
+    return Response('Usage: https://github.com/VergeDX/rss_filter_server/blob/master/README.md')
 
 
 @app.route('/filter')
 def rss_filter():
-    rss_url = request.args.get('rss_url')
-    title_contains = request.args.get('title_contains')
-    if not (rss_url and title_contains):
+    # if not (rss_url and title_contains)
+    if not ((rss_url := request.args.get('rss_url')) and (title_contains := request.args.get('title_contains'))):
         return api_usage()
 
     try:
-        base_xml = requests.get(rss_url).content
-        root = etree.fromstring(base_xml)
+        root = etree.fromstring(requests.get(rss_url).content)
 
         #  Subordinate to the <rss> element is a single <channel> element.
         # @see https://validator.w3.org/feed/docs/rss2.html
         channel = root.xpath('/rss/channel')[0]
-        items = channel.xpath('item')
 
-        for item in items:
+        for item in channel.xpath('item'):
             titles = item.xpath('title')
+            # noinspection PyUnboundLocalVariable
             if titles and title_contains not in titles[0].text:
                 channel.remove(item)
 
@@ -45,13 +42,10 @@ def rss_filter():
 
 @app.route('/github_releases')
 def github_releases():
-    repos_arg = request.args.get('repos')
-    if not repos_arg:
+    if not (repos_arg := request.args.get('repos')):
         return api_usage()
 
     try:
-        repo_list = repos_arg.split(', ')
-
         # https://github.com/lkiesow/python-feedgen#create-a-feed
         fg = FeedGenerator()
 
@@ -61,9 +55,8 @@ def github_releases():
         fg.description('Tracker more repo\'s release in one rss link! '
                        'Written by HyDEV, thanks for using. ')
 
-        for repo_str in repo_list:
-            r_json = requests.get(REPOS_API + repo_str + LATEST).json()
-            if 'message' not in r_json:
+        for repo_str in repos_arg.split(', '):
+            if 'message' not in (r_json := requests.get(REPOS_API + repo_str + LATEST).json()):
                 # https://github.com/lkiesow/python-feedgen#add-feed-entries
                 fe = fg.add_item()
                 fe.title('[%s] %s' % (repo_str, r_json['name']))
