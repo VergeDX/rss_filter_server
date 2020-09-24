@@ -55,7 +55,8 @@ def github_releases():
         fg.description('Tracker more repo\'s release in one rss link! '
                        'Written by HyDEV, thanks for using. ')
 
-        for repo_str in repos_arg.split(', '):
+        # repos arg list to set, filtered same items.
+        for repo_str in set(repos_arg.split(', ')):
             if 'message' not in (r_json := requests.get(REPOS_API + repo_str + LATEST).json()):
                 # https://github.com/lkiesow/python-feedgen#add-feed-entries
                 fe = fg.add_item()
